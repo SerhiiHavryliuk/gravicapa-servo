@@ -48,13 +48,13 @@ struct Button {
 };
 
 // Кнопки керування меню
-Button buttonReset = { 21, 0, false };
-Button buttonRunTest = { 22, 0, false };
-Button buttonOk = { 17, 0, false };  // todo: поки не використовується, можна використовувати її для встановлення заданої температури для нового алгоритму граничні межі
+Button buttonReset = { 12, 0, false };
+Button buttonRunTest = { 13, 0, false };
+Button buttonOk = { 15, 0, false };  // todo: поки не використовується, можна використовувати її для встановлення заданої температури для нового алгоритму граничні межі
 Button buttonRight = { 2, 0, false };
-Button buttonLeft = { 15, 0, false };
-Button buttonDown = { 13, 0, false };
-Button buttonUp = { 12, 0, false };
+Button buttonLeft = { 17, 0, false };
+Button buttonDown = { 22, 0, false };
+Button buttonUp = { 21, 0, false };
 
 // Змінні для відслідковування часу між перериваннями
 unsigned long button_time = 0;
