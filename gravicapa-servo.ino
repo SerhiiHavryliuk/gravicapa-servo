@@ -35,6 +35,10 @@ int pos = 0;  // variable to store the servo position
 // Recommended PWM GPIO pins on the ESP32 include 2,4,12-19,21-23,25-27,32-33
 int servoPin = 27;
 
+// Pins for Leds - green (normal state) and red (test in progress)
+int ledRedPin = 32;
+int ledGreenPin = 33;
+
 // поки не зрозумфло як її використовувати, подумати щоб видалити
 int currentRotation = 0;     // змінна для відстеження поточного кута
 int startServoPosition = 0;  // змінна для зберігання початкового положення серводвигуна
@@ -167,6 +171,14 @@ void setup() {
   // todo: Цей фікс прибирає дрибіжжання сервомотора при старті (якщо стартова температура ще менша), треба розібратись чому не можна виставити в 0 градусів
   //myservo.write(10);  // повертаємо сервомотор у початкове положення (0 градусів)
   // Servo ---------------------------------------------------------------
+
+  // Leds ---------------------------------------------------------------
+  pinMode(ledRedPin, OUTPUT);
+  pinMode(ledGreenPin, OUTPUT);
+  // Змінюємо підсвітку світлодіодів (вкл зелений світлодіод)
+  digitalWrite(ledRedPin, LOW);
+  digitalWrite(ledGreenPin, HIGH);
+  // Leds ---------------------------------------------------------------
 }
 
 void loop() {
@@ -224,6 +236,10 @@ void loop() {
 // Запуск тесту
 // -------------------------------------------------------------------------------
 void runTestServo(int startTemp, int deltaTemp) {
+  // Змінюємо підсвітку світлодіодів (вкл червоний світлодіод)
+  digitalWrite(ledRedPin, HIGH);
+  digitalWrite(ledGreenPin, LOW);
+
   int servoAngelStartTemp = calibration.getMinRotation();  // Стартовий кут повороту сервомотора сервомотора
   int servoTimeDeltaTemp = 1500;                            // Час між кроками сервомотора
   int testTime = 2;                                        // Час тесту (2хв, 3хв, 5хв, 15хв)
@@ -299,6 +315,10 @@ void runTestServo(int startTemp, int deltaTemp) {
   delay(2000);
   // переходимо в голвне меню
   redrawMenu();
+
+  // Змінюємо підсвітку світлодіодів (вкл зелений світлодіод)
+  digitalWrite(ledRedPin, LOW);
+  digitalWrite(ledGreenPin, HIGH);
 }
 
 
