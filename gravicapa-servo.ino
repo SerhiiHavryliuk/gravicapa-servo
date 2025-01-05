@@ -39,6 +39,11 @@ int servoPin = 27;
 int ledRedPin = 32;
 int ledGreenPin = 33;
 
+// Налаштування пінів
+int ANALOG_PIN = 26; // Пін, до якого підключено акумулятор (через дільник напруги)
+int MAX_VOLTAGE = 4.2; // Максимальна напруга повністю зарядженої батареї
+int MIN_VOLTAGE = 3.0; // Мінімальна напруга розрядженої батареї
+
 // поки не зрозумфло як її використовувати, подумати щоб видалити
 int currentRotation = 0;     // змінна для відстеження поточного кута
 int startServoPosition = 0;  // змінна для зберігання початкового положення серводвигуна
@@ -182,6 +187,7 @@ void setup() {
 }
 
 void loop() {
+  readVoltageBattery();
   // Перевірка натискання кнопок
   // Кнопка Reset
   // Повертаємо сервомотор у початкове положення
@@ -443,8 +449,12 @@ void clear_display() {
 // Основне меню
 // -------------------------------------------------------------------------------
 void show_main_menu_display() {
+  int zaradBatt = readVoltageBattery();   // Заряд батареї
+
   tft.setCursor(0, 4, 4);  // Встановлюємо курсор для виводу тексту
-  tft.println("Menu:");    // Виводимо заголовок меню
+  tft.print("Menu:    battary ");    // Виводимо заголовок меню
+  tft.print(zaradBatt);
+  tft.println("%");
   tft.println();
 
   tft.setTextColor(TFT_WHITE);  // Білий колір для тексту
@@ -517,4 +527,27 @@ void show_text_in_menu(String text_1, String text_2, boolean isLoading) {
     // Затримка на пів секунду
     delay(500);
   }
+}
+
+
+// функція повертає заряд батареї
+int readVoltageBattery(){
+    // Зчитування напруги з аналогового піну
+  int analogValue = analogRead(ANALOG_PIN);
+  
+  // Перетворення аналогового значення у напругу (залежить від дільника напруги)
+  float voltage = analogValue * (3.3 / 4095.0) * 3.2; // Якщо використовується дільник 1:2
+
+  // Розрахунок рівня заряду у відсотках
+  int batteryPercentage = map(voltage * 100, MIN_VOLTAGE * 100, MAX_VOLTAGE * 100, 0, 100);
+  batteryPercentage = constrain(batteryPercentage, 0, 100); // Обмеження 0-100%
+
+  // Вивід на серіал (мжна видалити)
+  Serial.print("Voltage: ");
+  Serial.print(voltage);
+  Serial.print("V, Battery: ");
+  Serial.print(batteryPercentage);
+  Serial.println("%");
+
+  return batteryPercentage;
 }
