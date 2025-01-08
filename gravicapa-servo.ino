@@ -11,7 +11,16 @@
 // Calibrations ---------------------------------------------------------------
 #include <Calibration.h>                       // Підключаємо бібліотеку
 // todo: калібровку треба завершити, задумка хороша, реалізація ще з костилями
-CalibrationLib calibration(-10, 40, 12, 140);  // Задаємо діапазони температур та кутів
+// minTemperature;  // Мінімальна температура
+// maxTemperature;  // Максимальна температура
+// minRotation;     // Мінімальний кут повороту (для minTemperature)
+// maxRotation;     // Максимальний кут повороту (для maxTemperature)
+// Наприклад CalibrationLib calibration(-15, 55, 12, 180); 
+// де -13 - мін температура в Цельсіях
+// де 55 - макс температура Цельсіях
+// де 12 - Мінімальний кут повороту для (-13 Цельсія)
+// де 180 - Максимальний кут повороту для (55 Цельсія)
+CalibrationLib calibration(-13, 55, 12, 180);  // Задаємо діапазони температур та кутів
 
 // Use hardware SPI
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
@@ -19,9 +28,23 @@ TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 // TFT Display -----------------------------------------------------------------
 #define TFT_GREY 0x5AEB  // New colour
 unsigned long drawTime = 0;
-int activeItemMenu = 1;      // Активний пункт меню (зараз 2 шт)
-int startTemperature = -10;  // Стартова температураб стартове значення (-10 С)
+int activeItemMenu = 1;      // Активний пункт меню (зараз 3 шт) за замовчанням
+
+// Змінні в МЕНЮ
+// Start Temp - Стартова температура
+int startTemperature = -13;  // Стартова температураб стартове значення (-10 С)
+int startTemperatureMax = 0; 
+int startTemperatureMin = -13; 
+
+// Delta temp - швидкість наростання температури Цельсії на Хвилину
 int deltaTemperature = 30;   // Наростання температури за 1 хв, стартове значення (30 С)
+int deltaTemperatureMax = 30;
+int deltaTemperatureMin = 1;
+
+// Time test - час тесту
+int timeTest = 2;
+int timeTestMax = 30;
+int timeTestMin = 1;
 // TFT Display -----------------------------------------------------------------
 
 
@@ -39,7 +62,7 @@ int servoPin = 27;
 int ledRedPin = 32;
 int ledGreenPin = 33;
 
-// Налаштування пінів
+// Налаштування пінів та зміних для зчитування напруги з акумулятора
 int ANALOG_PIN = 26; // Пін, до якого підключено акумулятор (через дільник напруги)
 int MAX_VOLTAGE = 4.2; // Максимальна напруга повністю зарядженої батареї
 int MIN_VOLTAGE = 3.0; // Мінімальна напруга розрядженої батареї
@@ -226,7 +249,9 @@ void loop() {
   if (buttonDown.pressed) {
     Serial.printf("Кнопка Down натискалась %u раз(и)\n", buttonDown.numberKeyPresses);
     buttonDown.pressed = false;
-    setActiveItemMenu(2);  
+
+    activeItemMenu ++;
+    setActiveItemMenu(activeItemMenu);
   }
 
   // Кнопка RunUp
@@ -234,7 +259,9 @@ void loop() {
   if (buttonUp.pressed) {
     Serial.printf("Кнопка Up натискалась %u раз(и)\n", buttonUp.numberKeyPresses);
     buttonUp.pressed = false;
-    setActiveItemMenu(1);
+
+    activeItemMenu --;
+    setActiveItemMenu(activeItemMenu);
   }
 }
 
@@ -356,43 +383,63 @@ void goToStartPositionServo() {
 // Зменшення температури в меню
 // -------------------------------------------------------------------------------
 void decreaseMenuTemperature() {
-  if (activeItemMenu == 1) {
-    if (startTemperature == 0) {
-      startTemperature = -10;
-    }
-    if (startTemperature == -10) {
-      startTemperature = -10;
-    }
-  }
-  if (activeItemMenu == 2) {
-    if (deltaTemperature == 5) {
-      deltaTemperature = 5;
-    } else {
-      deltaTemperature -= 5;
-    }
+
+switch (activeItemMenu) {
+    case 1:
+      //Стартова температура
+      if (startTemperature < startTemperatureMax) {
+        startTemperature++;
+      }
+      break;
+    case 2:
+      // Дельта температури
+      if (deltaTemperature < deltaTemperatureMax) {
+        deltaTemperature++;
+      }
+      break;
+    case 3:
+      // Дельта температури
+      if (timeTest < timeTestMax) {
+        timeTest++;
+      }
+      break;
+    default: 
+      // выполняется, если не выбрана ни одна альтернатива 
+      // default необязателен 
+      break;
   }
 
   redrawMenu();
 }
 
 // -------------------------------------------------------------------------------
-// Збільшення температури в меню
+// Збільшення температури в меню (Right button)
 // -------------------------------------------------------------------------------
 void incrementMenuTemperature() {
-  if (activeItemMenu == 1) {
-    if (startTemperature == 0) {
-      startTemperature = 0;
-    }
-    if (startTemperature == -10) {
-      startTemperature = 0;
-    }
-  }
-  if (activeItemMenu == 2) {
-    if (deltaTemperature == 30) {
-      deltaTemperature = 30;
-    } else {
-      deltaTemperature += 5;
-    }
+
+switch (activeItemMenu) {
+    case 1:
+      //Стартова температура
+      if (startTemperature > startTemperatureMin) {
+        startTemperature--;
+      }
+      break;
+    case 2:
+      // Дельта температури
+      if (deltaTemperature > deltaTemperatureMin) {
+        deltaTemperature--;
+      }
+      break;
+    case 3:
+      // Дельта температури
+      if (timeTest > deltaTemperatureMin) {
+        timeTest--;
+      }
+      break;
+    default: 
+      // выполняется, если не выбрана ни одна альтернатива 
+      // default необязателен 
+      break;
   }
 
   redrawMenu();
@@ -402,7 +449,19 @@ void incrementMenuTemperature() {
 // Встановити активним пункт меню
 // -------------------------------------------------------------------------------
 void setActiveItemMenu(int numberActiveItem) {
-  activeItemMenu = numberActiveItem;
+      switch (numberActiveItem) {
+        case 1:
+          activeItemMenu = 1;
+          break;
+        case 2:
+          activeItemMenu = 2;
+          break;
+        case 3:
+          activeItemMenu = 3;
+          break;
+        default: 
+          activeItemMenu = 1;
+      }
   redrawMenu();
 }
 
@@ -469,9 +528,15 @@ void show_main_menu_display() {
   tft.print(String(deltaTemperature));  // Виводимо значення Delta Temperature
   tft.println(" C");
 
-  tft.setTextFont(2);
   tft.setTextColor(TFT_WHITE);  // Білий колір для тексту
-  tft.print("                              v2024.1");
+  tft.print("   Time test:  ");
+  tft.setTextColor(TFT_YELLOW);         // Жовтий колір для температури
+  tft.print(String(timeTest));  // Виводимо значення Delta Temperature
+  tft.println(" min");
+
+  // tft.setTextFont(2);
+  // tft.setTextColor(TFT_WHITE);  // Білий колір для тексту
+  // tft.print("                              v2024.1");
 }
 
 // -------------------------------------------------------------------------------
